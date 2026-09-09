@@ -93,6 +93,12 @@
             background: #1d4ed8;
         }
 
+        .filters {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 10px;
+        }
+
         .ticket {
             border: 1px solid #d1d5db;
             padding: 18px;
@@ -104,9 +110,9 @@
             margin-top: 0;
         }
 
-        .ticket select {
-            max-width: 250px;
-            margin-bottom: 5px;
+        .ticket-id {
+            color: #2563eb;
+            font-weight: bold;
         }
 
         .delete-btn {
@@ -118,14 +124,19 @@
             background: #b91c1c;
         }
 
-        .ticket-id {
-            color: #2563eb;
-            font-weight: bold;
+        .no-ticket {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
         }
 
         @media (max-width: 700px) {
             .dashboard {
                 grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -184,6 +195,7 @@
             placeholder="Describe your IT issue"></textarea>
 
         <label>Priority</label>
+
         <select id="priority">
             <option value="Low">Low</option>
             <option value="Medium">Medium</option>
@@ -194,14 +206,47 @@
 
     </div>
 
-    <!-- Tickets -->
+    <!-- Search and Filters -->
+    <div class="card">
+
+        <h2>🔍 Search & Filter Tickets</h2>
+
+        <div class="filters">
+
+            <input
+                type="text"
+                id="search"
+                placeholder="Search by Ticket ID or Title"
+                oninput="displayTickets()">
+
+            <select id="statusFilter" onchange="displayTickets()">
+
+                <option value="All">All Status</option>
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+
+            </select>
+
+            <select id="priorityFilter" onchange="displayTickets()">
+
+                <option value="All">All Priority</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+    <!-- Ticket List -->
     <div class="card">
 
         <h2>🎫 Ticket List</h2>
 
-        <div id="ticketList">
-            <p>No tickets available.</p>
-        </div>
+        <div id="ticketList"></div>
 
     </div>
 
@@ -211,30 +256,47 @@
 
 function createTicket() {
 
-    const name = document.getElementById("name").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const title = document.getElementById("title").value.trim();
-    const description = document.getElementById("description").value.trim();
-    const priority = document.getElementById("priority").value;
+    const name =
+        document.getElementById("name").value.trim();
+
+    const email =
+        document.getElementById("email").value.trim();
+
+    const title =
+        document.getElementById("title").value.trim();
+
+    const description =
+        document.getElementById("description").value.trim();
+
+    const priority =
+        document.getElementById("priority").value;
 
     if (!name || !email || !title || !description) {
+
         alert("Please fill all fields.");
+
         return;
     }
 
     const ticket = {
 
-        id: "TKT-" + Math.floor(10000 + Math.random() * 90000),
+        id: "TKT-" +
+            Math.floor(10000 + Math.random() * 90000),
 
         name: name,
+
         email: email,
+
         title: title,
+
         description: description,
+
         priority: priority,
 
         status: "Open",
 
-        createdAt: new Date().toLocaleString()
+        createdAt:
+            new Date().toLocaleString()
 
     };
 
@@ -256,7 +318,6 @@ function createTicket() {
     document.getElementById("description").value = "";
 
     displayTickets();
-
 }
 
 
@@ -270,26 +331,64 @@ function displayTickets() {
 
     updateDashboard(tickets);
 
-    if (tickets.length === 0) {
+    const search =
+        document.getElementById("search")
+        .value
+        .toLowerCase();
+
+    const statusFilter =
+        document.getElementById("statusFilter").value;
+
+    const priorityFilter =
+        document.getElementById("priorityFilter").value;
+
+
+    const filteredTickets = tickets.filter(ticket => {
+
+        const matchesSearch =
+            ticket.id.toLowerCase().includes(search) ||
+            ticket.title.toLowerCase().includes(search);
+
+        const matchesStatus =
+            statusFilter === "All" ||
+            ticket.status === statusFilter;
+
+        const matchesPriority =
+            priorityFilter === "All" ||
+            ticket.priority === priorityFilter;
+
+        return (
+            matchesSearch &&
+            matchesStatus &&
+            matchesPriority
+        );
+
+    });
+
+
+    if (filteredTickets.length === 0) {
 
         ticketList.innerHTML =
-            "<p>No tickets available.</p>";
+            '<div class="no-ticket">No matching tickets found.</div>';
 
         return;
     }
 
+
     ticketList.innerHTML = "";
 
-    tickets.forEach(ticket => {
+
+    filteredTickets.forEach(ticket => {
 
         const ticketDiv =
             document.createElement("div");
 
         ticketDiv.className = "ticket";
 
+
         ticketDiv.innerHTML = `
 
-            <h3>${ticket.title}</h3>
+            <h3>🎫 ${ticket.title}</h3>
 
             <p class="ticket-id">
                 Ticket ID: ${ticket.id}
@@ -322,7 +421,8 @@ function displayTickets() {
 
             <label>Status</label>
 
-            <select onchange="changeStatus('${ticket.id}', this.value)">
+            <select
+                onchange="changeStatus('${ticket.id}', this.value)">
 
                 <option value="Open"
                     ${ticket.status === "Open" ? "selected" : ""}>
@@ -343,11 +443,13 @@ function displayTickets() {
 
             <br>
 
-            <button class="delete-btn"
+            <button
+                class="delete-btn"
                 onclick="deleteTicket('${ticket.id}')">
-                Delete Ticket
-            </button>
 
+                Delete Ticket
+
+            </button>
         `;
 
         ticketList.appendChild(ticketDiv);
@@ -375,9 +477,7 @@ function changeStatus(id, newStatus) {
         );
 
         displayTickets();
-
     }
-
 }
 
 
@@ -395,7 +495,6 @@ function deleteTicket(id) {
     );
 
     displayTickets();
-
 }
 
 
@@ -404,22 +503,32 @@ function updateDashboard(tickets) {
     const total = tickets.length;
 
     const open =
-        tickets.filter(t => t.status === "Open").length;
+        tickets.filter(
+            ticket => ticket.status === "Open"
+        ).length;
 
     const progress =
-        tickets.filter(t => t.status === "In Progress").length;
+        tickets.filter(
+            ticket => ticket.status === "In Progress"
+        ).length;
 
     const resolved =
-        tickets.filter(t => t.status === "Resolved").length;
+        tickets.filter(
+            ticket => ticket.status === "Resolved"
+        ).length;
 
-    document.getElementById("totalTickets").textContent = total;
 
-    document.getElementById("openTickets").textContent = open;
+    document.getElementById("totalTickets")
+        .textContent = total;
 
-    document.getElementById("progressTickets").textContent = progress;
+    document.getElementById("openTickets")
+        .textContent = open;
 
-    document.getElementById("resolvedTickets").textContent = resolved;
+    document.getElementById("progressTickets")
+        .textContent = progress;
 
+    document.getElementById("resolvedTickets")
+        .textContent = resolved;
 }
 
 
