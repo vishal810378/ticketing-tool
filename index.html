@@ -1,1 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Support Ticketing Tool</title>
 
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        header {
+            background: #1f2937;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .ticket {
+            border: 1px solid #ddd;
+            padding: 18px;
+            margin-top: 15px;
+            border-radius: 8px;
+        }
+
+        .ticket h3 {
+            margin-top: 0;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .delete-btn {
+            background: #dc2626;
+            margin-top: 10px;
+        }
+
+        .delete-btn:hover {
+            background: #b91c1c;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🎫 IT Support Ticketing Tool</h1>
+    <p>Manage IT Support Requests</p>
+</header>
+
+<div class="container">
+
+    <div class="card">
+        <h2>Create New Ticket</h2>
+
+        <label>Requester Name</label>
+        <input type="text" id="name" placeholder="Enter your name">
+
+        <label>Email</label>
+        <input type="email" id="email" placeholder="Enter your email">
+
+        <label>Ticket Title</label>
+        <input type="text" id="title" placeholder="Example: Outlook is not working">
+
+        <label>Description</label>
+        <textarea id="description" placeholder="Describe your issue"></textarea>
+
+        <label>Priority</label>
+        <select id="priority">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+        </select>
+
+        <button onclick="createTicket()">Create Ticket</button>
+    </div>
+
+    <div class="card">
+        <h2>🎫 Tickets</h2>
+        <div id="ticketList">
+            <p>No tickets available.</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+function createTicket() {
+
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const title = document.getElementById("title").value;
+    const description = document.getElementById("description").value;
+    const priority = document.getElementById("priority").value;
+
+    if (!name || !email || !title || !description) {
+        alert("Please fill all fields.");
+        return;
+    }
+
+    const ticket = {
+        id: Date.now(),
+        name: name,
+        email: email,
+        title: title,
+        description: description,
+        priority: priority,
+        status: "Open"
+    };
+
+    let tickets = JSON.parse(localStorage.getItem("tickets")) || [];
+
+    tickets.push(ticket);
+
+    localStorage.setItem("tickets", JSON.stringify(tickets));
+
+    alert("Ticket created successfully!");
+
+    document.getElementById("name").value = "";
+    document.getElementById("email").value = "";
+    document.getElementById("title").value = "";
+    document.getElementById("description").value = "";
+
+    displayTickets();
+}
+
+
+function displayTickets() {
+
+    const ticketList = document.getElementById("ticketList");
+
+    let tickets = JSON.parse(localStorage.getItem("tickets")) || [];
+
+    if (tickets.length === 0) {
+        ticketList.innerHTML = "<p>No tickets available.</p>";
+        return;
+    }
+
+    ticketList.innerHTML = "";
+
+    tickets.forEach(ticket => {
+
+        const ticketDiv = document.createElement("div");
+
+        ticketDiv.className = "ticket";
+
+        ticketDiv.innerHTML = `
+            <h3>🎫 ${ticket.title}</h3>
+
+            <p><strong>Requester:</strong> ${ticket.name}</p>
+
+            <p><strong>Email:</strong> ${ticket.email}</p>
+
+            <p><strong>Description:</strong> ${ticket.description}</p>
+
+            <p><strong>Priority:</strong> ${ticket.priority}</p>
+
+            <p class="status">
+                <strong>Status:</strong> ${ticket.status}
+            </p>
+
+            <button class="delete-btn"
+                onclick="deleteTicket(${ticket.id})">
+                Delete Ticket
+            </button>
+        `;
+
+        ticketList.appendChild(ticketDiv);
+    });
+}
+
+
+function deleteTicket(id) {
+
+    let tickets = JSON.parse(localStorage.getItem("tickets")) || [];
+
+    tickets = tickets.filter(ticket => ticket.id !== id);
+
+    localStorage.setItem("tickets", JSON.stringify(tickets));
+
+    displayTickets();
+}
+
+
+displayTickets();
+
+</script>
+
+</body>
+</html>
